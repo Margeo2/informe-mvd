@@ -4,3 +4,4 @@ pyarrow
 streamlit
 supabase
 supafunc
+matplotlib
