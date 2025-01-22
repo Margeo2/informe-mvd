@@ -4,7 +4,7 @@ import streamlit as st
 csstitulo = """
 .custom-header {
     font-family: Arial, sans-serif;
-    font-size: 20px;
+    font-size: 22px;
     font-weight: bold;
     text-align: center;
     color: #333;

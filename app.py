@@ -6,21 +6,33 @@ import pandas as pd
 from module_css import apply_custom_css, csstitulo, csstabla, csstablafiltro
 import data_processing
 
-# Llamamos a la función que aplica el CSS
+# Aplicar estilos CSS personalizados
 apply_custom_css()
 
 # Conectar a Supabase
 client = connect_supabase()
 
-# Parámetros de archivo
+# Parámetros de archivo y vistas disponibles
 bucket_name = "INFO"
-file_name = "VT_NOMINA_REP_RECUPERO_X_ANIO_MVD.parquet"
-file_name_calendario = "VT_RECUPERO_CALENDARIO.parquet"
+file_name = "VT_NOMINA_REP_RECUPERO_X_ANIO_MVD_LTGO_SEMILLA.parquet"
+vistas = {
+    "Mas Vida Digna": "VT_RECUPERO_CALENDARIO_MVD.parquet",
+    "Lo Tengo": "VT_RECUPERO_CALENDARIO_LTGO.parquet",
+    "Semilla": "VT_RECUPERO_CALENDARIO_SEMILLA.parquet",
+}
+
+# Título personalizado en la barra lateral
+st.sidebar.markdown('<p style="font-size: 20px; font-weight: bold;">RECUPERO</p>', unsafe_allow_html=True)
+
+vista_seleccionada = st.sidebar.selectbox("Selecciona Programa",list(vistas.keys()))
+
+# Obtener el nombre del archivo correspondiente a la vista seleccionada
+file_name_calendario = vistas[vista_seleccionada]
 
 # Aplicar el CSS al markdown
 st.markdown(f'<style>{csstitulo}</style>', unsafe_allow_html=True)
 
-# Obtener fecha de actualización
+# Encabezado del informe
 update_date = get_file_update_date(client, bucket_name, file_name)
 st.markdown(
     f"""
@@ -83,8 +95,11 @@ st.markdown('<div class="table-container">', unsafe_allow_html=True)
 # Aplicar el CSS al markdown
 st.markdown(f'<style>{csstablafiltro}</style>', unsafe_allow_html=True)
 
-# Cargar y filtrar datos de VT_RECUPERO_CALENDARIO
+# Cargar datos de la vista seleccionada
+st.markdown(f"### Datos Recupero de: {vista_seleccionada}")
 df_calendario = load_parquet_from_supabase(client, bucket_name, file_name_calendario)
+
+
 if df_calendario is not None:
     if 'PERIODO_CUOTA' in df_calendario.columns:
         # Convertir PERIODO_CUOTA a datetime
@@ -103,7 +118,7 @@ if df_calendario is not None:
         anios_disponibles = sorted(df_calendario['AÑO'].unique())
         
         # Selectores en la barra lateral para el mes y año
-        st.sidebar.header("RECUPERO \n Filtros por Mes y Año")
+        st.sidebar.header("Filtros por Mes y Año")
         mes_inicio = st.sidebar.selectbox("Selecciona el Mes de inicio", meses_disponibles)
         anio_inicio = st.sidebar.selectbox("Selecciona el Año de inicio", anios_disponibles)
         mes_fin = st.sidebar.selectbox("Selecciona el Mes de fin", meses_disponibles)
@@ -120,7 +135,7 @@ if df_calendario is not None:
         st.write("\n\n\n\n\n\n\n")  # Esto agrega saltos de línea
 
         # Hacer el texto en negrita y cambiar el tamaño usando HTML
-        st.markdown('<p style="font-size: 18px; font-weight: bold;">RECUPERO:</p>', unsafe_allow_html=True)
+        #st.markdown('<p style="font-size: 18px; font-weight: bold;">RECUPERO:</p>', unsafe_allow_html=True)
 
         st.write(f"Datos filtrados desde {fecha_inicio.strftime('%d-%m-%Y')} hasta {fecha_fin.strftime('%d-%m-%Y')}:")
         
@@ -132,7 +147,7 @@ if df_calendario is not None:
         st.dataframe(df_filtrado)
 
         # Botón para descargar como Excel
-        download_excel(df_filtrado, fecha_inicio, fecha_fin)
+        download_excel(df_filtrado, fecha_inicio, fecha_fin, alias=vista_seleccionada)
     else:
         st.error("La columna 'PERIODO_CUOTA' no existe en el archivo.")
 
