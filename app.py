@@ -1,5 +1,6 @@
 import streamlit as st
-from supabase_connection import connect_supabase, load_parquet_from_supabase, get_file_update_date
+#from supabase_connection import connect_supabase, load_parquet_from_supabase, get_file_update_date
+from github_connection import load_parquet_from_github, get_file_update_date_from_github
 from data_processing import group_by_program_type, group_by_desembolso, filter_by_date, process_data
 from file_export import download_excel
 import pandas as pd
@@ -9,31 +10,28 @@ import data_processing
 # Aplicar estilos CSS personalizados
 apply_custom_css()
 
-# Conectar a Supabase
-client = connect_supabase()
-
 # Parámetros de archivo y vistas disponibles
-bucket_name = "INFO"
-file_name = "VT_NOMINA_REP_RECUPERO_X_ANIO_MVD_LTGO_SEMILLA.parquet"
+
+file_path = "archivos/VT_NOMINA_REP_RECUPERO_X_ANIO_MVD_LTGO_SEMILLA.parquet"
 vistas = {
-    "Mas Vida Digna": "VT_RECUPERO_CALENDARIO_MVD.parquet",
-    "Lo Tengo": "VT_RECUPERO_CALENDARIO_LTGO.parquet",
-    "Semilla": "VT_RECUPERO_CALENDARIO_SEMILLA.parquet",
+    "Mas Vida Digna": "archivos/VT_RECUPERO_CALENDARIO_MVD.parquet",
+    "Lo Tengo": "archivos/VT_RECUPERO_CALENDARIO_LTGO.parquet",
+    "Semilla": "archivos/VT_RECUPERO_CALENDARIO_SEMILLA.parquet",
 }
 
 # Título personalizado en la barra lateral
 st.sidebar.markdown('<p style="font-size: 20px; font-weight: bold;">RECUPERO</p>', unsafe_allow_html=True)
 
-vista_seleccionada = st.sidebar.selectbox("Selecciona Programa",list(vistas.keys()))
 
-# Obtener el nombre del archivo correspondiente a la vista seleccionada
-file_name_calendario = vistas[vista_seleccionada]
+# Selector de vista en la barra lateral
+vista_seleccionada = st.sidebar.selectbox("Selecciona Programa", list(vistas.keys()))
+file_name_calendario = vistas[vista_seleccionada]  # Archivo correspondiente a la vista seleccionada
 
 # Aplicar el CSS al markdown
 st.markdown(f'<style>{csstitulo}</style>', unsafe_allow_html=True)
 
 # Encabezado del informe
-update_date = get_file_update_date(client, bucket_name, file_name)
+update_date = get_file_update_date_from_github(file_path)
 st.markdown(
     f"""
     <div class="custom-header">
@@ -52,8 +50,8 @@ st.markdown('<div class="table-container">', unsafe_allow_html=True)
 # Aplicar el CSS al markdown
 st.markdown(f'<style>{csstabla}</style>', unsafe_allow_html=True)
 
-# Cargar datos de VT_NOMINA_REP_RECUPERO_X_ANIO_MVD
-df = load_parquet_from_supabase(client, bucket_name, file_name)
+# Cargar datos de VT_NOMINA_REP_RECUPERO_X_ANIO_MVD_LTGO_SEMILLA
+df = load_parquet_from_github(file_path)
 
 if df is not None:
     # Agrupar datos
@@ -84,7 +82,7 @@ if df is not None:
         # Manejar errores en caso de que las columnas necesarias no estén presentes
         st.error(f"Error al procesar los datos: {str(e)}")
 else:
-    st.error("No se pudo cargar el archivo desde Supabase.")      
+    st.error("No se pudo cargar el archivo principal desde GitHub.")      
 
 # Cerrar el contenedor
 st.markdown('</div>', unsafe_allow_html=True)        
@@ -97,7 +95,7 @@ st.markdown(f'<style>{csstablafiltro}</style>', unsafe_allow_html=True)
 
 # Cargar datos de la vista seleccionada
 st.markdown(f"### Datos Recupero de: {vista_seleccionada}")
-df_calendario = load_parquet_from_supabase(client, bucket_name, file_name_calendario)
+df_calendario = load_parquet_from_github(file_name_calendario)
 
 
 if df_calendario is not None:
