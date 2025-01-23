@@ -1,6 +1,6 @@
 import streamlit as st
 #from supabase_connection import connect_supabase, load_parquet_from_supabase, get_file_update_date
-from github_connection import load_parquet_from_github, get_file_update_date_from_github
+from connection_github import load_parquet_from_github, get_file_update_date_from_github
 from data_processing import group_by_program_type, group_by_desembolso, filter_by_date, process_data
 from file_export import download_excel
 import pandas as pd
