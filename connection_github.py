@@ -11,7 +11,8 @@ load_dotenv()  # Carga las variables del archivo .env
 GITHUB_USERNAME = "Margeo2"  # Tu usuario de GitHub
 GITHUB_REPO = "informe-mvd"  # Nombre de tu repositorio
 GITHUB_BRANCH = "master"       # Rama donde están los archivos
-GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+# Usa el token desde Streamlit secrets
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN") or st.secrets["GITHUB_TOKEN"]
 
 if not GITHUB_TOKEN:
     st.error("El token de GitHub (GITHUB_TOKEN) no está configurado. Asegúrate de definirlo como una variable de entorno.")
