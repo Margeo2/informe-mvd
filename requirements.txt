@@ -2,8 +2,6 @@ numpy
 pandas
 pyarrow
 streamlit
-supabase
-supafunc
 matplotlib
 XlsxWriter
 python-dotenv
