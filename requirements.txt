@@ -6,3 +6,4 @@ supabase
 supafunc
 matplotlib
 XlsxWriter
+python-dotenv

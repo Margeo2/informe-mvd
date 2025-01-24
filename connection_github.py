@@ -3,6 +3,9 @@ import requests
 import streamlit as st
 import io
 import os
+from dotenv import load_dotenv
+
+load_dotenv()  # Carga las variables del archivo .env
 
 # Reemplaza con los detalles de tu repositorio
 GITHUB_USERNAME = "Margeo2"  # Tu usuario de GitHub
