@@ -3,3 +3,5 @@ __pycache__/
 
 # Ignorar archivos compilados de Python
 *.pyc
+
+.env
