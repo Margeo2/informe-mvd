@@ -12,11 +12,11 @@ apply_custom_css()
 
 # Parámetros de archivo y vistas disponibles
 
-file_path = "archivos/VT_NOMINA_REP_RECUPERO_X_ANIO_MVD_LTGO_SEMILLA.parquet"
+file_path = "VT_NOMINA_REP_RECUPERO_X_ANIO_MVD_LTGO_SEMILLA.parquet"
 vistas = {
-    "Mas Vida Digna": "archivos/VT_RECUPERO_CALENDARIO_MVD.parquet",
-    "Lo Tengo": "archivos/VT_RECUPERO_CALENDARIO_LTGO.parquet",
-    "Semilla": "archivos/VT_RECUPERO_CALENDARIO_SEMILLA.parquet",
+    "Mas Vida Digna": "VT_RECUPERO_CALENDARIO_MVD.parquet",
+    "Lo Tengo": "VT_RECUPERO_CALENDARIO_LTGO.parquet",
+    "Semilla": "VT_RECUPERO_CALENDARIO_SEMILLA.parquet",
 }
 
 # Título personalizado en la barra lateral
