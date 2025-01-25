@@ -29,9 +29,7 @@ if vista_seleccionada:
     data = load_parquet_from_github(file_path2)
     data = optimize_dataframe(data)  # Optimiza el DataFrame
 
-df_calendario = data#vistas[vista_seleccionada]  # Archivo correspondiente a la vista seleccionada
-#data2 = load_parquet_from_github(file_name_calendario)
-#data2 = optimize_dataframe(data2)  # Optimiza el DataFrame
+df_calendario = data
 
 # Aplicar el CSS al markdown
 st.markdown(f'<style>{csstitulo}</style>', unsafe_allow_html=True)
@@ -102,8 +100,6 @@ st.markdown(f'<style>{csstablafiltro}</style>', unsafe_allow_html=True)
 
 # Cargar datos de la vista seleccionada
 st.markdown(f"### Datos Recupero de: {vista_seleccionada}")
-#df_calendario = load_parquet_from_github(file_name_calendario)
-
 
 if df_calendario is not None:
     if 'PERIODO_CUOTA' in df_calendario.columns:
@@ -124,10 +120,10 @@ if df_calendario is not None:
         
         # Selectores en la barra lateral para el mes y año
         st.sidebar.header("Filtros por Mes y Año")
-        mes_inicio = st.sidebar.selectbox("Selecciona el Mes de inicio", meses_disponibles)
-        anio_inicio = st.sidebar.selectbox("Selecciona el Año de inicio", anios_disponibles)
+        mes_inicio = st.sidebar.selectbox("Selecciona el Mes de inicio", meses_disponibles, index=meses_disponibles.index(9))
+        anio_inicio = st.sidebar.selectbox("Selecciona el Año de inicio", anios_disponibles, index=anios_disponibles.index(2023))
         mes_fin = st.sidebar.selectbox("Selecciona el Mes de fin", meses_disponibles)
-        anio_fin = st.sidebar.selectbox("Selecciona el Año de fin", anios_disponibles)
+        anio_fin = st.sidebar.selectbox("Selecciona el Año de fin", anios_disponibles, index=anios_disponibles.index(2024))
 
         # Crear fechas de inicio y fin
         fecha_inicio = pd.Timestamp(year=anio_inicio, month=mes_inicio, day=1)
