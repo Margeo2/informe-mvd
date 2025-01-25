@@ -1,7 +1,6 @@
 import streamlit as st
-#from supabase_connection import connect_supabase, load_parquet_from_supabase, get_file_update_date
-from connection_github import load_parquet_from_github, get_file_update_date_from_github
-from data_processing import group_by_program_type, group_by_desembolso, filter_by_date, process_data
+from connection_github import load_parquet_from_github, get_file_update_date_from_github, optimize_dataframe
+from data_processing import group_by_program_type, filter_by_date, process_data
 from file_export import download_excel
 import pandas as pd
 from module_css import apply_custom_css, csstitulo, csstabla, csstablafiltro
@@ -22,10 +21,17 @@ vistas = {
 # Título personalizado en la barra lateral
 st.sidebar.markdown('<p style="font-size: 20px; font-weight: bold;">RECUPERO</p>', unsafe_allow_html=True)
 
-
 # Selector de vista en la barra lateral
 vista_seleccionada = st.sidebar.selectbox("Selecciona Programa", list(vistas.keys()))
-file_name_calendario = vistas[vista_seleccionada]  # Archivo correspondiente a la vista seleccionada
+# Cargar datos solo cuando el usuario selecciona algo
+if vista_seleccionada:
+    file_path2 = vistas[vista_seleccionada]
+    data = load_parquet_from_github(file_path2)
+    data = optimize_dataframe(data)  # Optimiza el DataFrame
+
+df_calendario = data#vistas[vista_seleccionada]  # Archivo correspondiente a la vista seleccionada
+#data2 = load_parquet_from_github(file_name_calendario)
+#data2 = optimize_dataframe(data2)  # Optimiza el DataFrame
 
 # Aplicar el CSS al markdown
 st.markdown(f'<style>{csstitulo}</style>', unsafe_allow_html=True)
@@ -51,7 +57,8 @@ st.markdown('<div class="table-container">', unsafe_allow_html=True)
 st.markdown(f'<style>{csstabla}</style>', unsafe_allow_html=True)
 
 # Cargar datos de VT_NOMINA_REP_RECUPERO_X_ANIO_MVD_LTGO_SEMILLA
-df = load_parquet_from_github(file_path)
+df_nomina = load_parquet_from_github(file_path)
+df = optimize_dataframe(df_nomina)
 
 if df is not None:
     # Agrupar datos
@@ -95,7 +102,7 @@ st.markdown(f'<style>{csstablafiltro}</style>', unsafe_allow_html=True)
 
 # Cargar datos de la vista seleccionada
 st.markdown(f"### Datos Recupero de: {vista_seleccionada}")
-df_calendario = load_parquet_from_github(file_name_calendario)
+#df_calendario = load_parquet_from_github(file_name_calendario)
 
 
 if df_calendario is not None:
@@ -138,7 +145,7 @@ if df_calendario is not None:
         st.write(f"Datos filtrados desde {fecha_inicio.strftime('%d-%m-%Y')} hasta {fecha_fin.strftime('%d-%m-%Y')}:")
         
         # Formateo campo AÑO
-        df_filtrado['AÑO'] = df_filtrado['AÑO'].astype(str)
+        df_filtrado.loc[:, 'AÑO'] = df_filtrado['AÑO'].astype(str)
 
         # Eliminar la columna 'PERIODO_CUOTA'
         df_filtrado = df_filtrado.drop(columns=['PERIODO_CUOTA'])

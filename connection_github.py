@@ -24,8 +24,8 @@ def get_github_file_url(repo: str, branch: str, file_path: str, username: str) -
     """
     return f"https://raw.githubusercontent.com/{username}/{repo}/{branch}/{file_path}"
 
-
-def load_parquet_from_github(file_path: str) -> pd.DataFrame:
+@st.cache_data
+def load_parquet_from_github(file_path: str, columns: list = None) -> pd.DataFrame:
     """
     Carga un archivo Parquet desde un repositorio de GitHub como un DataFrame de pandas.
     """
@@ -88,3 +88,20 @@ def get_file_update_date_from_github(file_path: str) -> str:
     except Exception as e:
         st.error(f"Error al obtener la fecha de actualización desde GitHub: {e}")
         return "Fecha desconocida"
+
+def optimize_dataframe(dataframe: pd.DataFrame) -> pd.DataFrame:
+    """
+    Optimiza un DataFrame reduciendo el tamaño de las columnas numéricas
+    y convirtiendo cadenas de texto a categorías.
+    """
+    for col in dataframe.select_dtypes(include=["float"]):
+        dataframe[col] = dataframe[col].astype("float32")
+    for col in dataframe.select_dtypes(include=["int"]):
+        dataframe[col] = dataframe[col].astype("int32")
+    for col in dataframe.select_dtypes(include=["object"]):
+        num_unique_values = dataframe[col].nunique()
+        num_total_values = len(dataframe[col])
+        # Convertir a categoría si hay pocos valores únicos
+        if num_unique_values / num_total_values < 0.5:
+            dataframe[col] = dataframe[col].astype("category")
+    return dataframe
