@@ -65,7 +65,7 @@ def group_by_desembolso(df: pd.DataFrame) -> pd.DataFrame:
     df_grouped_desembolso = pd.concat([df_grouped_desembolso, total_row], ignore_index=True)
 
     # Cambiar el nombre de la columna INSCRIPCIONES a una cadena vacía
-    df_grouped_desembolso.rename(columns={'INSCRIPCIONES': ''}, inplace=True)
+    df_grouped_desembolso.rename(columns={'INSCRIPCIONES': 'CANTIDAD'}, inplace=True)
 
     return df_grouped_desembolso
 
