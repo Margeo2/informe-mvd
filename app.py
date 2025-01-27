@@ -26,10 +26,14 @@ vista_seleccionada = st.sidebar.selectbox("Selecciona Programa", list(vistas.key
 # Cargar datos solo cuando el usuario selecciona algo
 if vista_seleccionada:
     file_path2 = vistas[vista_seleccionada]
-    data = load_parquet_from_github(file_path2)
-    data = optimize_dataframe(data)  # Optimiza el DataFrame
+    df_calendario = load_parquet_from_github(file_path2)
+    # Validar que los datos se cargaron correctamente
+    if df_calendario is None:
+        st.error(f"Error al cargar los datos del archivo {file_path2}. Revisa la conexión o el repositorio.")
+        st.stop()
+    df_calendario = optimize_dataframe(df_calendario)  # Optimiza el DataFrame
 
-df_calendario = data
+#df_calendario = data
 
 # Aplicar el CSS al markdown
 st.markdown(f'<style>{csstitulo}</style>', unsafe_allow_html=True)
@@ -56,6 +60,9 @@ st.markdown(f'<style>{csstabla}</style>', unsafe_allow_html=True)
 
 # Cargar datos de VT_NOMINA_REP_RECUPERO_X_ANIO_MVD_LTGO_SEMILLA
 df_nomina = load_parquet_from_github(file_path)
+if df_nomina is None:
+    st.error(f"Error al cargar los datos del archivo {file_path}. Revisa la conexión o el repositorio.")
+    st.stop()
 df = optimize_dataframe(df_nomina)
 
 if df is not None:
@@ -154,5 +161,8 @@ if df_calendario is not None:
 
 # Cerrar el contenedor
 st.markdown('</div>', unsafe_allow_html=True)              
+
+if st.button("Actualizar datos"):
+    st.cache_data.clear()
 
 print(dir(data_processing))  

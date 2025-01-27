@@ -24,34 +24,67 @@ def get_github_file_url(repo: str, branch: str, file_path: str, username: str) -
     """
     return f"https://raw.githubusercontent.com/{username}/{repo}/{branch}/{file_path}"
 
+#def get_github_file_api_url(GITHUB_REPO: str, GITHUB_BRANCH: str, file_path: str, GITHUB_USERNAME: str) -> str:
+#    """
+#    Construye la URL de la API de GitHub para acceder a un archivo.
+#    """
+#    return f"https://api.github.com/repos/{GITHUB_USERNAME}/{GITHUB_REPO}/contents/{file_path}?ref={GITHUB_BRANCH}"
+
 @st.cache_data
 def load_parquet_from_github(file_path: str, columns: list = None) -> pd.DataFrame:
     """
     Carga un archivo Parquet desde un repositorio de GitHub como un DataFrame de pandas.
+
+    Args:
+        file_path (str): Ruta del archivo dentro del repositorio.
+        columns (list, optional): Lista de columnas a cargar. Por defecto, carga todas.
+
+    Returns:
+        pd.DataFrame: DataFrame con los datos del archivo Parquet.
     """
     try:
         # Construir la URL del archivo en GitHub
         url = get_github_file_url(GITHUB_REPO, GITHUB_BRANCH, file_path, GITHUB_USERNAME)
         headers = {}
 
+        # Configurar cabecera para repositorios privados (si aplica)
         if GITHUB_TOKEN:
-            headers["Authorization"] = f"Bearer {GITHUB_TOKEN}"  # Si el repo es privado
+            headers["Authorization"] = f"Bearer {GITHUB_TOKEN}"  # Token para autenticar
 
         # Descargar el archivo desde GitHub
         response = requests.get(url, headers=headers)
 
         # Verificar si la solicitud fue exitosa
         if response.status_code != 200:
-            raise FileNotFoundError(f"No se pudo descargar el archivo '{file_path}'. HTTP {response.status_code}")
+            st.error(f"Error al descargar el archivo '{file_path}'. HTTP {response.status_code} - {response.text}")
+            raise FileNotFoundError(
+                f"No se pudo descargar el archivo '{file_path}' desde GitHub. "
+                f"Respuesta HTTP: {response.status_code}. Detalles: {response.text}"
+            )
 
-        # Leer el archivo Parquet
+        # Cargar el archivo Parquet en memoria
         parquet_file = io.BytesIO(response.content)
-        return pd.read_parquet(parquet_file)
+        try:
+            df = pd.read_parquet(parquet_file, columns=columns)
+        except ImportError as e:
+            raise ImportError(
+                "No se pudo leer el archivo Parquet. Asegúrate de tener instaladas las bibliotecas 'pyarrow' o 'fastparquet'."
+            ) from e
 
-    except Exception as e:
-        st.error(f"Error al cargar los datos desde GitHub: {e}")
+        return df
+
+    except requests.exceptions.RequestException as e:
+        st.error("Error al realizar la solicitud al repositorio de GitHub.")
+        st.error(f"Detalles: {e}")
         return None
 
+    except FileNotFoundError as e:
+        st.error(f"Archivo no encontrado: {e}")
+        return None
+
+    except Exception as e:
+        st.error(f"Error desconocido al cargar los datos desde GitHub: {e}")
+        return None
 
 def get_file_update_date_from_github(file_path: str) -> str:
     """
@@ -95,13 +128,15 @@ def optimize_dataframe(dataframe: pd.DataFrame) -> pd.DataFrame:
     y convirtiendo cadenas de texto a categorías.
     """
     for col in dataframe.select_dtypes(include=["float"]):
-        dataframe[col] = dataframe[col].astype("float32")
+        # Convertir a float32 y manejar NaN
+        dataframe[col] = pd.to_numeric(dataframe[col], downcast="float")
     for col in dataframe.select_dtypes(include=["int"]):
-        dataframe[col] = dataframe[col].astype("int32")
+        # Convertir a int32
+        dataframe[col] = pd.to_numeric(dataframe[col], downcast="integer")
     for col in dataframe.select_dtypes(include=["object"]):
+        # Convertir texto a categoría si aplica
         num_unique_values = dataframe[col].nunique()
         num_total_values = len(dataframe[col])
-        # Convertir a categoría si hay pocos valores únicos
         if num_unique_values / num_total_values < 0.5:
             dataframe[col] = dataframe[col].astype("category")
     return dataframe
