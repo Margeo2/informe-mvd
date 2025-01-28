@@ -1,7 +1,7 @@
 import streamlit as st
 from connection_github import load_parquet_from_github, get_file_update_date_from_github, optimize_dataframe
 from data_processing import group_by_program_type, filter_by_date, process_data
-from file_export import download_excel
+from file_export import download_excel, convertir_a_excel, download_simple_excel
 import pandas as pd
 from module_css import apply_custom_css, csstitulo, csstabla, csstablafiltro
 import data_processing
@@ -105,8 +105,50 @@ st.markdown('<div class="table-container">', unsafe_allow_html=True)
 # Aplicar el CSS al markdown
 st.markdown(f'<style>{csstablafiltro}</style>', unsafe_allow_html=True)
 
+# Ruta del archivo
+archivo_inscripciones = "T_INSCRIPCIONES_MVD_LTGO_SEMILLA.parquet"
+
+# Lista de columnas necesarias (ajusta según tus necesidades)
+columnas_necesarias = ["ID_INSCRIPCION", "ID_VIN", "ID_GRUPO_UNICO", "NRO_DOCUMENTO", "ID_SEXO", "PAI_COD_PAIS", "ID_NUMERO", "TIPO_PROGRAMA", "ID_PROGRAMA"]  # Cambia estos nombres según tu archivo.
+
+# Carga y optimiza el DataFrame
+@st.cache_data
+def cargar_datos_inscripciones(file_path, columnas):
+    """
+    Carga el archivo Parquet de inscripciones con las columnas necesarias.
+    """
+    data = load_parquet_from_github(file_path, columns=columnas)
+    return optimize_dataframe(data)
+
+# Carga los datos al DataFrame
+df_inscripciones = cargar_datos_inscripciones(archivo_inscripciones, columnas_necesarias)
+
+# Configurar el tamaño del título usando HTML y CSS
+st.markdown(
+    """
+    <h1 style='text-align: center; font-size: 18px;'>Inscripciones</h1>
+    """,
+    unsafe_allow_html=True
+)
+
+# Convertir solo las columnas numéricas a cadenas sin comas (solo para visualización)
+df_display = df_inscripciones.head(5).copy()  # Mostrar solo los primeros 5 registros
+
+# Identificar columnas numéricas (int, float)
+numeric_cols = df_display.select_dtypes(include=['int', 'float']).columns
+
+# Aplicar el formateo solo a las columnas numéricas
+for col in numeric_cols:
+    df_display[col] = df_display[col].apply(lambda x: f"{x:.0f}" if pd.notnull(x) else "")
+
+# Mostrar el dataframe sin comas
+st.dataframe(df_display, use_container_width=True)
+
+download_simple_excel(df_inscripciones, "T_INSCRIPCIONES_MVD_LTGO_SEMILLA.xlsx")  # Descargar el archivo
+
+#*******************************************************************************************************************
 # Cargar datos de la vista seleccionada
-st.markdown(f"### Datos Recupero de: {vista_seleccionada}")
+st.markdown(f"### Recupero de: {vista_seleccionada}")
 
 if df_calendario is not None:
     if 'PERIODO_CUOTA' in df_calendario.columns:
@@ -131,6 +173,11 @@ if df_calendario is not None:
         anio_inicio = st.sidebar.selectbox("Selecciona el Año de inicio", anios_disponibles, index=anios_disponibles.index(2023))
         mes_fin = st.sidebar.selectbox("Selecciona el Mes de fin", meses_disponibles)
         anio_fin = st.sidebar.selectbox("Selecciona el Año de fin", anios_disponibles, index=anios_disponibles.index(2024))
+        
+        # Botón "Actualizar Cache" en la barra lateral
+        if st.sidebar.button("Actualizar Cache"):
+            st.cache_data.clear()
+            st.sidebar.success("¡Cache actualizado correctamente!")
 
         # Crear fechas de inicio y fin
         fecha_inicio = pd.Timestamp(year=anio_inicio, month=mes_inicio, day=1)
@@ -161,8 +208,5 @@ if df_calendario is not None:
 
 # Cerrar el contenedor
 st.markdown('</div>', unsafe_allow_html=True)              
-
-if st.button("Actualizar datos"):
-    st.cache_data.clear()
 
 print(dir(data_processing))  
