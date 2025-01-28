@@ -126,7 +126,7 @@ df_inscripciones = cargar_datos_inscripciones(archivo_inscripciones, columnas_ne
 # Configurar el tamaño del título usando HTML y CSS
 st.markdown(
     """
-    <h1 style='text-align: center; font-size: 18px;'>Inscripciones Mas Vida Digna</h1>
+    <h1 style='text-align: center; font-size: 18px;'>Inscripciones de Programas</h1>
     """,
     unsafe_allow_html=True
 )
